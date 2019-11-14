@@ -1,0 +1,45 @@
+version: "3.3"
+
+services:
+    portainer:
+        image: portainer/portainer
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+        command: --admin-password "$$2y$$05$$arC5e4UbRPxfR68jaFnAAe1aL7C1U03pqfyQh49/9lB9lqFxLfBqS" -H unix:///var/run/docker.sock
+        container_name: portainer
+    static:
+        build:
+            context:    ./static
+            dockerfile: Dockerfile.static
+        image: web/static
+        container_name: static
+        expose:
+            - "8080"
+    ui:
+        build:
+            context:    ./ui
+            dockerfile: Dockerfile.ui
+        image: web/ui
+        container_name: ui
+        expose:
+            - "8080"
+    proxy:
+        image: "nginx:alpine"
+        expose:
+            - "80"
+        ports:
+#            - "${EXTERNAL_PORT}:80"
+            - target:    80
+              published: ${EXTERNAL_PORT}
+              protocol:  tcp
+              mode:      host
+
+        volumes:
+#            - ./proxy/nginx.conf:/etc/nginx/nginx.conf
+            - type:     bind
+              source:   ./proxy/nginx.conf
+              target:   /etc/nginx/nginx.conf           
+        container_name: proxy
+        depends_on:
+            - static
+            - ui
