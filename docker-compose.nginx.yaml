@@ -5,6 +5,8 @@ services:
         image: portainer/portainer
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
+            - /tmp/portainer_data:/data
+            - /tmp/portainer_logs:/var/logs
         command: --admin-password "$$2y$$05$$arC5e4UbRPxfR68jaFnAAe1aL7C1U03pqfyQh49/9lB9lqFxLfBqS" -H unix:///var/run/docker.sock
         container_name: portainer
         environment:
@@ -33,6 +35,27 @@ services:
             - "80"
         ports:
             - "${EXTERNAL_PORT}:80"
+        container_name: proxy
+        
+    proxy-nginx: 
+        image: "nginx:alpine"
+        expose:
+            - "80"
+        ports:
+            - target:    80
+              published: ${EXTERNAL_PORT}
+              protocol:  tcp
+              mode:      host
+        volumes:
+            - type:     bind
+              source:   ./proxy/nginx.conf
+              target:   /etc/nginx/nginx.conf.template
+            - /tmp/logs:/tmp/
+        container_name: proxy2
+        depends_on:
+            - static
+            - ui
         environment:
             EXTERNAL_PORT: ${EXTERNAL_PORT}
-        container_name: proxy
+        command: /bin/sh -c "sed 's/EXTERNAL_PORT/${EXTERNAL_PORT}/'      /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && exec nginx-debug -g 'daemon off;'"
+        
