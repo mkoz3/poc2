@@ -18,7 +18,5 @@ Login for stats and portainer: admin/password
 
 * *haproxy/haproxy.cfg*  
   haproxy config file
-* *proxy/nginx.conf*  
-  nginx proxy config file
 * *static/pom.xml* / *ui/pom.xml*  
   pom.xml for creating docker images directly in maven
